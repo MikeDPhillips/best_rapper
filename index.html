@@ -32,7 +32,7 @@
 
   .yAxis .tick text {
       font-family: Georgia, sans-serif;
-      font-size: 1.1em;
+      font-size: 1.5em;
   }
 
   .xAxis .tick text {
@@ -78,6 +78,7 @@
   }
 
   .caption {
+      width:800px;
       font-family: Garamond, Baskerville, "Times New Roman", serif;
       margin-top: 1em;
       margin-left:1em;
@@ -112,7 +113,7 @@
   const svg = d3.select("svg#chart");
   const width = svg.attr("width");
   const height = svg.attr("height");
-  const margin = {top: 10, right: 10, bottom: 40, left: 125};
+  const margin = {top: 10, right: 10, bottom: 40, left: 205};
   const chartWidth = width - margin.left - margin.right;
   const chartHeight = height - margin.top - margin.bottom;
 
@@ -131,8 +132,8 @@
         "dont event make the list do not receive low scores.",
     drop_one:"The single highest score of the artist is dropped, this attempts to punish artists with only one hit.",
     top_five:"The total score of up to the first five songs that made the lists.",
-    total_appearances: "The number of times an artist appears on the lists, included as a featured rapper (the other methods" +
-        " do not consider the featured artists on a track."
+    total_appearances: "The number of times an artist appears on the lists, including as a featured rapper (the other methods" +
+        " do not consider guest verses on a track)."
   }
 
   let selector = d3.select("#methodSelect")
