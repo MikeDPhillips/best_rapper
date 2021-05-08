@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <title>Mike Phillips HW8: Best Rapper</title>
+
+  <style>
+  #p1 {
+      width:60%;
+      font-family: Garamond, Baskerville, "Times New Roman", serif;
+      font-size: 1.2em;
+
+  }
+  svg {
+      border:1px solid #ccc;
+  }
+
+  div.title {
+      align:center;
+      width:900px;
+      border-top: 2px solid black;
+      border-bottom: 2px solid black;
+      padding-top: 0.25em;
+      margin-bottom: 0.25em;
+      font-family: Georgia, sans-serif;
+      font-size: 4em;
+      letter-spacing: -2px;
+  }
+
+
+
+  .yAxis .tick text {
+      font-family: Georgia, sans-serif;
+      font-size: 1.1em;
+  }
+
+  .xAxis .tick text {
+      font-family: Garamond, Baskerville, "Times New Roman", serif;
+      font-size: 1.2em;
+  }
+
+  div.caption {
+      font-family: Georgia, sans-serif;
+      font-size: 1.1em;
+      margin-top:0.8em;
+  }
+
+  #dropdown {
+      width:80%;
+      align-content:center;
+  }
+
+  #methodSelect{
+      align-content:center;
+  }
+
+
+  a {
+      color: red;
+      text-decoration: none;
+  }
+
+  rect.score {
+      fill: steelblue;
+  }
+
+  rect.score:hover {
+      fill: cyan;
+  }
+
+  .winner {
+      font-family: Georgia, sans-serif;
+      font-size: 2em;
+      letter-spacing: -1px;
+      margin-left:1em;
+
+  }
+
+  .caption {
+      font-family: Garamond, Baskerville, "Times New Roman", serif;
+      margin-top: 1em;
+      margin-left:1em;
+      font-size: 0.8em;
+      margin-bottom: 2em;
+
+  }
+  .emph {
+      font-weight: bold;
+  }
+  </style>
+</head>
+
+<body>
+<h3>Michael Phillips mdp38 </h3>
+<p id="p1">
+  For my dataset I chose the <a href="https://github.com/sjockers/bbc-best-rapmusic">best hip-hop song ranking dataset</a>. I wanted to find out which rappers
+  had the highest ranking by aggregating the song scores using different methodologies. Additionally,
+  I wanted to see how these different methodologies affected the rankings.
+</p>
+
+<div class = "title">Finding the Best Rapper</div>
+<div id="dropdown"><select id="methodSelect"></select></div>
+<svg id="chart" height="800" width="900"></svg>
+<div class = "winner"></div>
+<div class = "caption">
+</div>
+
+<script>
+
+  //Set up chart area as usual
+  const svg = d3.select("svg#chart");
+  const width = svg.attr("width");
+  const height = svg.attr("height");
+  const margin = {top: 10, right: 10, bottom: 40, left: 125};
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
+
+  let annotations = svg.append("g").attr("id","annotations");
+  let chartArea = svg.append("g").attr("id","points")
+      .attr("transform",`translate(${margin.left},${margin.top})`);
+
+  //set up the drop down selector for methodology
+  let methods = ["Total Score", "Highest Score", "Average Score", "Drop Highest Score", "Top Five Scores", "Total List Appearances"]
+  let value = ["total_score", "high_score", "avg_score", "drop_one", "top_five", "total_appearances"]
+
+  let descs = {
+    total_score:"Every score for every song of the artist is summed together into one score.",
+    high_score:"The single highest score is taken for each artist. This method rewards artists even if only one major success.",
+    avg_score:"Every score is averaged, this can punish artists with many hits on the lists since tracks that " +
+        "dont event make the list do not receive low scores.",
+    drop_one:"The single highest score of the artist is dropped, this attempts to punish artists with only one hit.",
+    top_five:"The total score of up to the first five songs that made the lists.",
+    total_appearances: "The number of times an artist appears on the lists, included as a featured rapper (the other methods" +
+        " do not consider the featured artists on a track."
+  }
+
+  let selector = d3.select("#methodSelect")
+      .selectAll("option")
+      .data(methods)
+      .enter()
+      .append("option")
+      .attr("class", "options")
+      .text( d => d)
+      .attr("value", (d,i) => value[i]);
+
+
+
+  //Read in file and start visualizing
+  d3.csv("top_rappers_short.csv", d3.autoType).then( data => {
+      d3.select("#methodSelect")
+          .on("change", d => {
+            let newVal = d3.select("#methodSelect").property('value');
+            updateChart(newVal);
+        })
+    //Create blank axes for x (the score) and y (the artists)
+    let xAxis = d3.axisBottom()
+    let xAxisG = annotations.append("g")
+        .attr("class", "xAxis")
+        .attr("transform",`translate(${margin.left},${chartHeight+margin.top})`)
+
+    let yAxis = d3.axisLeft()
+    let yAxisG = annotations.append("g")
+        .attr("class", "yAxis")
+        .attr("transform",`translate(${margin.left-10},${margin.top})`)
+
+
+
+
+    updateChart('total_score');
+
+      function updateChart(methodType) {
+        const nTicks = 10;
+        const nArtists = 20;
+        data.sort( (a,b) => d3.descending(a[methodType], b[methodType]));
+        console.log(data);
+
+        d3.select(".winner")
+            .html(`The greatest rapper is <span class = "emph">${data[0].Main}!</span>`)
+
+        d3.select(".caption")
+          .html('<span id="method" class="emph">Methodology:</span> ' + descs[methodType]);
+        //Add the y values (artists);
+        let artists = d3.map(data, d => d.Main).slice(0,nArtists);
+        let scores = d3.map(data, d => d[methodType]).slice(0, nArtists);
+        let scoreExtent = d3.extent(scores);
+        console.log(scoreExtent[1]);
+        const yScale = d3.scaleBand().domain(artists)
+            .range([0, chartHeight])
+            .padding(0.05);
+        yAxis.scale(yScale);
+        yAxisG.transition().call(yAxis);
+
+
+        const xScale = d3.scaleLinear()
+            .domain([0, scoreExtent[1] + 10])
+            .range([0, chartWidth]);
+        xAxis.scale(xScale).ticks(nTicks);
+        xAxisG.transition().call(xAxis);
+
+
+        //Build rectangles
+        let svg = d3.selectAll("svg#chart")
+
+        chartArea.selectAll("rect.score")
+            .data(data.slice(0, nArtists))
+            .join(
+              enter => enter.append("rect")
+                        .attr("class", "score")
+                        .attr("x", xScale(0))
+                        .attr("y", d => yScale(d.Main))
+                        .attr("width", d => xScale(d[methodType]))
+                        .attr("height", yScale.bandwidth())
+                        .attr("opacity", 0)
+                        .call( enter => enter.transition().attr('opacity'),1),
+
+                update => update.call( update => update.transition()
+                        .attr("x", xScale(0))
+                        .attr("y", d => yScale(d.Main))
+                        .attr("width", d => xScale(d[methodType]))
+                        .attr("height", yScale.bandwidth()) ) ,
+        exit => exit.call( exit => exit.transition().attr('opacity',0).remove() ) );
+
+      }
+
+
+
+
+
+  })
+  .catch( error => {
+    console.log(error);
+    alert ("Couldn't load the dataset!");
+  })
+
+</script>
+
+
+</body>
+</html>
