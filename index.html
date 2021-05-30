@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <script src="https://d3js.org/d3.v6.min.js"></script>
-  <title>Mike Phillips HW8: Best Rapper</title>
+  <title>Best Rapper Data Analysis</title>
 
   <style>
   #p1 {
@@ -93,9 +93,9 @@
 </head>
 
 <body>
-<h3>Michael Phillips mdp38 </h3>
+
 <p id="p1">
-  For my dataset I chose the <a href="https://github.com/sjockers/bbc-best-rapmusic">best hip-hop song ranking dataset</a>. I wanted to find out which rappers
+  This uses the <a href="https://github.com/sjockers/bbc-best-rapmusic">best hip-hop song ranking dataset</a> to explore which rappers
   had the highest ranking by aggregating the song scores using different methodologies. Additionally,
   I wanted to see how these different methodologies affected the rankings.
 </p>
@@ -155,13 +155,13 @@
             updateChart(newVal);
         })
     //Create blank axes for x (the score) and y (the artists)
-    let xAxis = d3.axisBottom()
-    let xAxisG = annotations.append("g")
+    var xAxis = d3.axisBottom()
+    var xAxisG = annotations.append("g")
         .attr("class", "xAxis")
         .attr("transform",`translate(${margin.left},${chartHeight+margin.top})`)
 
-    let yAxis = d3.axisLeft()
-    let yAxisG = annotations.append("g")
+    var yAxis = d3.axisLeft()
+    var yAxisG = annotations.append("g")
         .attr("class", "yAxis")
         .attr("transform",`translate(${margin.left-10},${margin.top})`)
 
@@ -171,6 +171,7 @@
     updateChart('total_score');
 
       function updateChart(methodType) {
+
         const nTicks = 10;
         const nArtists = 20;
         data.sort( (a,b) => d3.descending(a[methodType], b[methodType]));
@@ -197,7 +198,7 @@
             .domain([0, scoreExtent[1] + 10])
             .range([0, chartWidth]);
         xAxis.scale(xScale).ticks(nTicks);
-        xAxisG.transition().call(xAxis);
+        xAxisG.call(xAxis);
 
 
         //Build rectangles
